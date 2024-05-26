@@ -18,7 +18,13 @@ dotenv.config();
 
 //connect to the mongolodb
 mongoose
-  .connect(process.env.MONGO)
+  .connect(process.env.MONGO, {
+    user: "gtorrisi",
+    pass: "Angale1971",
+    dbName: "test",
+    w: "majority",
+    retryWrites: true,
+  })
   .then(() => {
     console.log("connected to mongodb");
   })
