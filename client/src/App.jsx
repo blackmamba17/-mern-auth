@@ -11,6 +11,7 @@ import Header from './components/Header';
 
 //react router dom to route the pages
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import PrivateRoute from './components/PrivateRoute';
 
 
 
@@ -32,7 +33,10 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/sign-in" element={<SignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route element={<PrivateRoute />}>
+          <Route path="/profile" element={<Profile />} />
+        </Route>
+
       </Routes>
     </BrowserRouter>
 
