@@ -63,7 +63,7 @@ function Profile() {
             <h1 className='text-3xl font-semibold text-center my-7 '>Profile</h1>
             <form className='flex flex-col gap-4'>
                 <input aria-label="file" onChange={(e) => setImage(e.target.files[0])} type="file" ref={fileRef} hidden accept='image/*' />
-                <img alt="profile" onClick={() => { fileRef.current.click() }} src={currentUser.profilePicture} className=' mt-2 h-24 w-24 self-center cursor-pointer rounded-full object-cover' />
+                <img alt="profile" onClick={() => { fileRef.current.click() }} src={formData.profilePicture || currentUser.profilePicture} className=' mt-2 h-24 w-24 self-center cursor-pointer rounded-full object-cover' />
                 <p className='self-center text-sm '>
                     {imageError ? (<span className='text-red-700'>error uploading image</span>) : (imagePercent > 0 && imagePercent) < 100 ? (<span className='text-slate-700'>{`Uploading:  ${imagePercent}%`}</span>) : <span className='text-green-700'>Image uploaded successfully</span>}
                 </p>
