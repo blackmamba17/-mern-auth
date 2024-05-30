@@ -3,15 +3,17 @@ import { useSelector } from 'react-redux'
 import { useRef } from 'react';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { app } from "../../firebase.js"
+import { updateUserFailure, updateUserSUccess, updateUserStart } from '../redux/user/userSlice.js';
+import { useDispatch } from 'react-redux';
 
 function Profile() {
 
-    const { currentUser } = useSelector(state => state.user);
+    const { currentUser, loading, error, success } = useSelector(state => state.user);
     const [image, setImage] = useState(undefined);
     const [imagePercent, setImagePercent] = useState(0);
     const [imageError, setImageError] = useState(false);
     const [formData, setFormData] = useState({});
-
+    const dispatch = useDispatch();
 
 
     const fileRef = useRef(null);
@@ -57,24 +59,59 @@ function Profile() {
         )
     }
 
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.id]: e.target.value
+        })
+    }
+
+    const handleSubmit = async (e) => {
+
+        dispatch(updateUserStart());
+
+
+        e.preventDefault();
+        try {
+            const res = await fetch(`/api/user/update/${currentUser._id}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await res.json();
+            if (data.success === false) {
+                dispatch(updateUserFailure(data.message));
+                return;
+            }
+
+            dispatch(updateUserSUccess(data));
+        } catch (error) {
+            dispatch(updateUserFailure(error.data));
+        }
+    }
+
     return (
         <div className='p-3 max-w-lg mx-auto '>
 
             <h1 className='text-3xl font-semibold text-center my-7 '>Profile</h1>
-            <form className='flex flex-col gap-4'>
+            <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
                 <input aria-label="file" onChange={(e) => setImage(e.target.files[0])} type="file" ref={fileRef} hidden accept='image/*' />
                 <img alt="profile" onClick={() => { fileRef.current.click() }} src={formData.profilePicture || currentUser.profilePicture} className=' mt-2 h-24 w-24 self-center cursor-pointer rounded-full object-cover' />
                 <p className='self-center text-sm '>
                     {imageError ? (<span className='text-red-700'>error uploading image</span>) : (imagePercent > 0 && imagePercent) < 100 ? (<span className='text-slate-700'>{`Uploading:  ${imagePercent}%`}</span>) : <span className='text-green-700'>Image uploaded successfully</span>}
                 </p>
-                <input defaultValue={currentUser.username} type="text" aria-label="username" id="username" placeholder='Username' className='bg-slate-100 rounded-lg p-3' />
-                <input defaultValue={currentUser.email} type="email" aria-label="email" id="email" placeholder='Email' className='bg-slate-100 rounded-lg p-3' />
-                <input type="password" aria-label="password" id="password" placeholder='Password' className='bg-slate-100 rounded-lg p-3' />
-                <button className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>Update</button>
-
+                <input onChange={handleChange} defaultValue={currentUser.username} type="text" aria-label="username" id="username" placeholder='Username' className='bg-slate-100 rounded-lg p-3' />
+                <input onChange={handleChange} defaultValue={currentUser.email} type="email" aria-label="email" id="email" placeholder='Email' className='bg-slate-100 rounded-lg p-3' />
+                <input onChange={handleChange} type="password" aria-label="password" id="password" placeholder='Password' className='bg-slate-100 rounded-lg p-3' />
+                <button disabled={loading} className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>{loading ? "loading..." : "Update"}</button>
             </form>
             <div className='flex justify-between mt-5'>
                 <span className='text-red-700 cursor-pointer'>Delete Account</span>
+
+                <p className='text-green-700'>{success && "user updated successfully"}<p className='text-red-700'>{error && `error while updating profile: ${error}`}</p></p>
                 <span className='text-red-700 cursor-pointer'>Sign Out</span>
             </div>
         </div>

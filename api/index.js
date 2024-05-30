@@ -1,5 +1,6 @@
 import { log } from "console";
 import express from "express";
+import cookieParser from "cookie-parser";
 
 //database
 import mongoose from "mongoose";
@@ -39,6 +40,8 @@ const app = express();
 //parser
 app.use(express.json());
 app.use(bodyParser.json());
+
+app.use(cookieParser());
 
 app.listen(3000, () => {
   console.log("server listening on port 3000");
