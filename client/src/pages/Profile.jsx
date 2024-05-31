@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import { useRef } from 'react';
 import { getDownloadURL, getStorage, ref, uploadBytesResumable } from 'firebase/storage';
 import { app } from "../../firebase.js"
-import { updateUserFailure, updateUserSUccess, updateUserStart } from '../redux/user/userSlice.js';
+import { deleteUserFailure, deleteUserSuccess, deleteUserStart, updateUserFailure, updateUserSuccess, updateUserStart } from '../redux/user/userSlice.js';
 import { useDispatch } from 'react-redux';
 
 function Profile() {
@@ -14,7 +14,6 @@ function Profile() {
     const [imageError, setImageError] = useState(false);
     const [formData, setFormData] = useState({});
     const dispatch = useDispatch();
-
 
     const fileRef = useRef(null);
 
@@ -87,9 +86,32 @@ function Profile() {
                 return;
             }
 
-            dispatch(updateUserSUccess(data));
+            dispatch(updateUserSuccess(data));
         } catch (error) {
             dispatch(updateUserFailure(error.data));
+        }
+    }
+
+    const handleDeleteAccount = async () => {
+        try {
+            dispatch(deleteUserStart());
+            const res = await fetch(`/api/user/delete/${currentUser._id}`, {
+                method: "DELETE",
+            });
+
+            const data = await res.json();
+            if (data.success === false) {
+                dispatch(deleteUserFailure(data.message));
+                return;
+            }
+
+
+            dispatch(deleteUserSuccess());
+            alert("user has been deleted");
+
+
+        } catch (error) {
+            dispatch(deleteUserFailure(error.data));
         }
     }
 
@@ -101,7 +123,7 @@ function Profile() {
                 <input aria-label="file" onChange={(e) => setImage(e.target.files[0])} type="file" ref={fileRef} hidden accept='image/*' />
                 <img alt="profile" onClick={() => { fileRef.current.click() }} src={formData.profilePicture || currentUser.profilePicture} className=' mt-2 h-24 w-24 self-center cursor-pointer rounded-full object-cover' />
                 <p className='self-center text-sm '>
-                    {imageError ? (<span className='text-red-700'>error uploading image</span>) : (imagePercent > 0 && imagePercent) < 100 ? (<span className='text-slate-700'>{`Uploading:  ${imagePercent}%`}</span>) : <span className='text-green-700'>Image uploaded successfully</span>}
+                    {imageError ? (<span className='text-red-700'>error uploading image</span>) : (imagePercent > 0 && imagePercent < 100) ? (<span className='text-slate-700'>{`Uploading:  ${imagePercent}%`}</span>) : imagePercent ? <span className='text-green-700'>Image uploaded successfully</span> : ""}
                 </p>
                 <input onChange={handleChange} defaultValue={currentUser.username} type="text" aria-label="username" id="username" placeholder='Username' className='bg-slate-100 rounded-lg p-3' />
                 <input onChange={handleChange} defaultValue={currentUser.email} type="email" aria-label="email" id="email" placeholder='Email' className='bg-slate-100 rounded-lg p-3' />
@@ -109,7 +131,7 @@ function Profile() {
                 <button disabled={loading} className='bg-slate-700 text-white p-3 rounded-lg uppercase hover:opacity-95 disabled:opacity-80'>{loading ? "loading..." : "Update"}</button>
             </form>
             <div className='flex justify-between mt-5'>
-                <span className='text-red-700 cursor-pointer'>Delete Account</span>
+                <span onClick={handleDeleteAccount} className='text-red-700 cursor-pointer'>Delete Account</span>
 
                 <p className='text-green-700'>{success && "user updated successfully"}<p className='text-red-700'>{error && `error while updating profile: ${error}`}</p></p>
                 <span className='text-red-700 cursor-pointer'>Sign Out</span>
